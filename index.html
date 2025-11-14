@@ -1,0 +1,664 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="./vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RPG Character Sheet</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&family=Inter:wght@400;600;700&family=Orbitron:wght@400;700&family=Great+Vibes&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./themes.css">
+    <style>
+      :root {
+        --sheet-bg-color: rgba(240, 230, 210, 0.85);
+        --section-bg-color: rgba(240, 230, 210, 0.7);
+        --border-color: #b8860b;
+        --border-style: solid;
+        --border-width: 2px;
+        --sheet-shadow: transparent 0 0 0 0 inset;
+        --component-bg-color: #f0e6d2;
+        --text-color: #000000;
+        --accent-color: #f59e0b;
+      }
+
+      body {
+        font-family: 'Inter', sans-serif;
+        transition: background-color 0.3s, color 0.3s, font-family 0.3s;
+        color: var(--text-color);
+      }
+      h1, h2, h3, .font-medieval {
+        font-family: 'MedievalSharp', serif;
+        color: var(--accent-color);
+      }
+      
+      /* ========================================================================== */
+      /* ANIMAÇÕES GERAIS */
+      /* ========================================================================== */
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      @keyframes fadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
+      }
+      @keyframes scaleUp {
+        from { transform: scale(0.95); }
+        to { transform: scale(1); }
+      }
+      @keyframes scaleDown {
+        from { transform: scale(1); }
+        to { transform: scale(0.95); }
+      }
+
+      .modal-enter {
+        animation: fadeIn 0.3s ease-out forwards;
+      }
+      .modal-content-enter {
+        animation: scaleUp 0.3s ease-out forwards;
+      }
+      .modal-exit {
+        animation: fadeOut 0.3s ease-in forwards;
+      }
+      .modal-content-exit {
+        animation: scaleDown 0.3s ease-in forwards;
+      }
+      
+      @keyframes star-shine {
+        0% {
+            transform: scale(0.8);
+            opacity: 0.5;
+            box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7);
+        }
+        80% {
+            transform: scale(1.05);
+            opacity: 1;
+            box-shadow: 0 0 20px 30px rgba(255, 215, 0, 0);
+        }
+        100% {
+            transform: scale(1);
+            opacity: 1;
+            box-shadow: 0 0 0 0 rgba(255, 215, 0, 0);
+        }
+      }
+      .star-shine-animation .modal-content-enter { 
+          animation: star-shine 0.8s ease-out forwards;
+      }
+
+      /* Animação de Flash para Atributos */
+      @keyframes attribute-flash {
+        0% { color: var(--accent-color); text-shadow: 0 0 8px var(--accent-color); }
+        100% { color: inherit; text-shadow: none; }
+      }
+      .attribute-flash-animation {
+        animation: attribute-flash 0.8s ease-out;
+      }
+
+      /* Animação de Pulso para Atributos */
+      @keyframes attribute-pulse-glow {
+        0% {
+          transform: scale(1);
+          text-shadow: none;
+        }
+        50% {
+          transform: scale(1.6);
+          text-shadow: 0 0 8px var(--pulse-color, #fff), 0 0 16px var(--pulse-color, #fff);
+        }
+        100% {
+          transform: scale(1);
+          text-shadow: none;
+        }
+      }
+      .attribute-pulse-animation {
+        animation: attribute-pulse-glow 1s ease-in-out;
+        display: inline-block;
+      }
+      
+      /* Animação de Ícone de Alma Disponível (Sacola) */
+      @keyframes soul-pulse-glow {
+        0% {
+          transform: scale(1);
+          filter: drop-shadow(0 0 2px #00e1ff);
+        }
+        50% {
+          transform: scale(1.3);
+          filter: drop-shadow(0 0 8px #00e1ff) drop-shadow(0 0 15px #00e1ff);
+        }
+        100% {
+          transform: scale(1);
+          filter: drop-shadow(0 0 2px #00e1ff);
+        }
+      }
+      .soul-indicator-animation {
+        animation: soul-pulse-glow 2s infinite ease-in-out;
+      }
+
+      /* Animação e Estilo da Aura da Alma no Modal */
+      .soul-orb {
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+        background: radial-gradient(circle, #a0e9ff 0%, #00bfff 40%, #005f7f 100%);
+        box-shadow: 0 0 5px #00e1ff, 0 0 10px #00e1ff, 0 0 15px #00bfff, 0 0 20px #005f7f;
+        animation: soul-orb-pulse 2.5s infinite ease-in-out;
+      }
+      @keyframes soul-orb-pulse {
+        0%, 100% { transform: scale(1); opacity: 0.9; }
+        50% { transform: scale(1.05); opacity: 1; }
+      }
+
+
+      /* Animação de Level Up */
+      @keyframes level-up-border-glow {
+        0%, 100% {
+          box-shadow: var(--sheet-shadow), 0 0 15px 5px rgba(0, 225, 255, 0.7);
+          border-color: #00e1ff;
+        }
+        50% {
+          box-shadow: var(--sheet-shadow), 0 0 30px 10px rgba(0, 225, 255, 0.9), 0 0 50px 15px rgba(0, 120, 255, 0.5);
+          border-color: #fff;
+        }
+      }
+
+      .level-up-glow {
+        animation: level-up-border-glow 0.8s infinite alternate;
+      }
+
+      @keyframes level-up-number-pop {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.5) rotate(-5deg); color: #00e1ff; }
+        100% { transform: scale(1); }
+      }
+      .level-up-number-pop-animation {
+        animation: level-up-number-pop 0.5s ease-in-out;
+        display: inline-block;
+      }
+
+      /* ========================================================================== */
+      /* ANIMAÇÃO DE NÍVEL (HEADER) */
+      /* ========================================================================== */
+      .level-display {
+        display: inline-block;
+        transition: all 0.3s ease-in-out;
+      }
+
+      @keyframes level-pulse-glow {
+        0%, 100% {
+          transform: scale(1);
+          text-shadow: 0 0 8px var(--accent-color), 0 0 12px var(--accent-color);
+        }
+        50% {
+          transform: scale(1.03);
+          text-shadow: 0 0 16px var(--accent-color), 0 0 24px var(--accent-color), 0 0 32px rgba(255, 255, 255, 0.5);
+        }
+      }
+      .level-pulse-glow {
+        animation: level-pulse-glow 3s infinite ease-in-out;
+      }
+
+      @keyframes level-up-flash {
+        0% {
+          transform: scale(1);
+          color: var(--accent-color);
+          text-shadow: 0 0 10px var(--accent-color), 0 0 20px #fff;
+        }
+        25% {
+          transform: scale(1.2) rotate(-3deg);
+          color: #00e1ff;
+          text-shadow: 0 0 15px #00e1ff, 0 0 30px #00e1ff, 0 0 45px #fff;
+        }
+        50% {
+          transform: scale(0.95);
+          color: var(--accent-color);
+          text-shadow: 0 0 5px var(--accent-color);
+        }
+        75% {
+          transform: scale(1.2) rotate(3deg);
+          color: #00e1ff;
+          text-shadow: 0 0 15px #00e1ff, 0 0 30px #00e1ff, 0 0 45px #fff;
+        }
+        100% {
+          transform: scale(1);
+          color: var(--accent-color);
+          text-shadow: 0 0 10px var(--accent-color), 0 0 20px #fff;
+        }
+      }
+      .level-up-flash {
+        animation: level-up-flash 0.8s ease-in-out 3;
+      }
+      
+      /* Interações de Botão */
+      .btn-interactive {
+        transition: transform 0.1s ease-out, background-color 0.2s;
+      }
+      .btn-interactive:hover:not(:disabled) {
+        transform: scale(1.05);
+      }
+      .btn-interactive:active:not(:disabled) {
+        transform: scale(0.95);
+      }
+      
+      /* Animações da Barra de Recursos */
+      @keyframes shimmer {
+        0% { transform: translateX(-100%) skewX(-30deg); }
+        100% { transform: translateX(200%) skewX(-30deg); }
+      }
+      .shimmer-bar::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 50%;
+        height: 100%;
+        background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%);
+        animation: shimmer 1.2s ease-in-out forwards;
+      }
+      
+      /* Animação de Acordeão (Section) */
+      .section-content-wrapper {
+        display: grid;
+        grid-template-rows: 0fr;
+        transition: grid-template-rows 0.4s ease-out;
+      }
+      .section-content-wrapper.open {
+        grid-template-rows: 1fr;
+      }
+      .section-content-wrapper > div {
+        overflow: hidden;
+      }
+
+      /* Animação de troca de abas no mobile */
+      @keyframes slide-in-right {
+        from { opacity: 0; transform: translateX(50px); }
+        to { opacity: 1; transform: translateX(0); }
+      }
+      .animate-slide-in-right {
+        animation: slide-in-right 0.3s ease-out forwards;
+      }
+
+      @keyframes slide-in-left {
+        from { opacity: 0; transform: translateX(-50px); }
+        to { opacity: 1; transform: translateX(0); }
+      }
+      .animate-slide-in-left {
+        animation: slide-in-left 0.3s ease-out forwards;
+      }
+
+      .animate-tab-enter { /* Animação inicial */
+        animation: fadeIn 0.3s ease-out forwards;
+      }
+      
+      /* ========================================================================== */
+      /* ANIMAÇÕES DE CRIAÇÃO/TROCA DE FICHA */
+      /* ========================================================================== */
+      @keyframes fire-pulse {
+        0% {
+          text-shadow: 0 0 10px #fef08a, 0 0 20px #facc15, 0 0 30px #e11d48, 0 0 40px #e11d48;
+          transform: scale(1);
+        }
+        50% {
+          text-shadow: 0 0 20px #fef9c3, 0 0 30px #fde047, 0 0 40px #fb7185, 0 0 50px #fb7185;
+          transform: scale(1.05);
+        }
+        100% {
+          text-shadow: 0 0 10px #fef08a, 0 0 20px #facc15, 0 0 30px #e11d48, 0 0 40px #e11d48;
+          transform: scale(1);
+        }
+      }
+      .fire-plus {
+        font-size: 20rem; /* Aumentado 3x */
+        line-height: 1;
+        animation: fire-pulse 2s infinite ease-in-out;
+      }
+
+      @keyframes fire-pulse-button {
+        0% {
+          text-shadow: 0 0 2px #fef08a, 0 0 4px #facc15, 0 0 6px #e11d48;
+          transform: scale(1);
+        }
+        50% {
+          text-shadow: 0 0 4px #fef9c3, 0 0 6px #fde047, 0 0 8px #fb7185;
+          transform: scale(1.1);
+        }
+        100% {
+          text-shadow: 0 0 2px #fef08a, 0 0 4px #facc15, 0 0 6px #e11d48;
+          transform: scale(1);
+        }
+      }
+
+      .fire-plus-button {
+        font-family: 'MedievalSharp', serif;
+        font-size: 2.5rem; /* Tamanho para o botão */
+        color: #fef9c3;
+        line-height: 1;
+        animation: fire-pulse-button 2s infinite ease-in-out;
+        display: inline-block;
+      }
+
+      @keyframes fadeInSlowly {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .creation-title {
+        opacity: 0;
+        pointer-events: none;
+        animation: fadeInSlowly 5s ease-out 0.5s forwards;
+      }
+
+      .creation-modal-content {
+        background-color: #261e14 !important;
+        border: 4px solid;
+        border-image-slice: 1;
+        border-image-source: linear-gradient(to bottom, #c0a060, #a07030);
+        color: #f0e6d2 !important;
+      }
+      .creation-modal-content .font-medieval {
+        color: #f59e0b !important;
+      }
+      .creation-modal-content input {
+        background-color: #3f3223 !important;
+        border-color: #6d583c !important;
+        color: #f0e6d2 !important;
+      }
+      .creation-modal-content button {
+        background-color: #8c6d3f !important;
+      }
+      .creation-modal-content button:hover {
+        background-color: #a17d4a !important;
+      }
+
+      /* ANIMAÇÃO DE SURGIMENTO MÁGICO */
+      @keyframes magical-aura-spawn {
+        0% {
+          opacity: 0;
+          transform: scale(0.8);
+          box-shadow: 0 0 0px 0px rgba(255, 215, 0, 0);
+        }
+        15% {
+          opacity: 1;
+          transform: scale(1.02);
+        }
+        50% {
+          transform: scale(1.05);
+          box-shadow: 0 0 80px 40px rgba(255, 215, 0, 0.7), 0 0 30px 15px rgba(255, 255, 224, 0.8) inset;
+        }
+        100% {
+          opacity: 1;
+          transform: scale(1);
+          box-shadow: 0 0 0px 0px rgba(255, 215, 0, 0);
+        }
+      }
+
+      .magical-aura-spawn {
+        animation: magical-aura-spawn 4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+      }
+      
+      /* ANIMAÇÃO DE TROCA DE FICHA */
+      @keyframes sheet-slide-out-anim {
+        from {
+          transform: translateX(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(-50%);
+          opacity: 0;
+        }
+      }
+      .sheet-slide-out {
+        animation: sheet-slide-out-anim 0.3s ease-in forwards;
+      }
+
+      @keyframes sheet-grow-in-anim {
+        from {
+          transform: scale(0.95);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+      .sheet-grow-in {
+        animation: sheet-grow-in-anim 0.3s ease-out forwards;
+      }
+
+
+      /* ========================================================================== */
+      /* ANIMAÇÕES DE GERAÇÃO DE NPC */
+      /* ========================================================================== */
+      @keyframes ripple-wave {
+        0%, 100% {
+          filter: blur(0px) contrast(1);
+          transform: scale(1);
+        }
+        50% {
+          filter: blur(1.5px) contrast(1.2);
+          transform: scale(1.005);
+        }
+      }
+
+      .npc-spawn-ripple {
+        animation: ripple-wave 1.5s ease-in-out;
+      }
+
+      .flaming-text-overlay {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+        pointer-events: none;
+        background-color: rgba(0,0,0,0.3);
+      }
+      
+      @keyframes flaming-text-intro {
+        0% {
+          opacity: 0;
+          transform: scale(0.8);
+        }
+        20% {
+          opacity: 1;
+          transform: scale(1.1);
+        }
+        80% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        100% {
+          opacity: 0;
+          transform: scale(1.2);
+        }
+      }
+      
+      @keyframes flame-flicker {
+        0%, 100% {
+          text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #fff, 0 0 20px #ffdd00, 0 0 35px #ffdd00, 0 0 40px #ff8800, 0 0 50px #ff4400, 0 0 60px #ff0000;
+        }
+        50% {
+          text-shadow: 0 0 10px #fff, 0 0 15px #fff, 0 0 20px #fff, 0 0 30px #ffee55, 0 0 40px #ffee55, 0 0 50px #ffaa33, 0 0 60px #ff6622, 0 0 70px #ff2200;
+        }
+      }
+
+      .flaming-text {
+        font-family: 'MedievalSharp', serif;
+        font-size: 3.5rem;
+        color: #fff;
+        animation: flaming-text-intro 3s ease-in-out forwards, flame-flicker 1.5s infinite alternate;
+      }
+
+
+      /* ========================================================================== */
+      /* DADO 3D */
+      /* ========================================================================== */
+      .dice-scene {
+          width: 150px;
+          height: 150px;
+          perspective: 1000px;
+      }
+      .dice-cube-container {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+      }
+      .dice-cube {
+          width: 150px;
+          height: 150px;
+          position: relative;
+          transform-style: preserve-3d;
+          transition: transform 1.2s cubic-bezier(0.25, 1, 0.5, 1);
+      }
+      .dice-cube.rolling {
+        animation: roll-3d 1.2s ease-out forwards;
+      }
+      .dice-face {
+          position: absolute;
+          width: 150px;
+          height: 150px;
+          border-width: 2px;
+          border-style: solid;
+          font-size: 80px;
+          font-weight: bold;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          backface-visibility: hidden;
+      }
+
+      .face-front  { transform: rotateY(0deg) translateZ(75px); }
+      .face-back   { transform: rotateY(180deg) translateZ(75px); }
+      .face-top    { transform: rotateX(90deg) translateZ(75px); }
+      .face-bottom { transform: rotateX(-90deg) translateZ(75px); }
+      .face-left   { transform: rotateY(-90deg) translateZ(75px); }
+      .face-right  { transform: rotateY(90deg) translateZ(75px); }
+      
+      @keyframes roll-3d {
+        0% { transform: translateY(0) rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+        20% { transform: translateY(-50px) rotateX(360deg) rotateY(180deg) rotateZ(90deg); }
+        40% { transform: translateY(0) rotateX(720deg) rotateY(360deg) rotateZ(180deg); }
+        60% { transform: translateY(-30px) rotateX(1080deg) rotateY(540deg) rotateZ(270deg); }
+        80% { transform: translateY(0) rotateX(1440deg) rotateY(720deg) rotateZ(360deg); }
+        100% { transform: translateY(0) rotateX(1440deg) rotateY(720deg) rotateZ(360deg); }
+      }
+
+      .dice-result-land {
+          transform: scale(0.5);
+          opacity: 0;
+          animation: land-and-pop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      }
+      @keyframes land-and-pop {
+          from { transform: scale(0.5) translateY(50px); opacity: 0; }
+          to { transform: scale(1) translateY(0); opacity: 1; }
+      }
+      .crit-success {
+          color: #FFD700;
+          text-shadow: 0 0 10px #FFD700, 0 0 20px #FFD700, 0 0 30px #FFA500;
+          animation: land-and-pop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, crit-glow 1.5s infinite alternate;
+      }
+      .crit-fail {
+          color: #DC143C;
+          text-shadow: 0 0 10px #DC143C, 0 0 20px #8B0000;
+          animation: land-and-pop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, fail-pulse 1s infinite;
+      }
+      @keyframes crit-glow {
+          from { text-shadow: 0 0 10px #FFD700, 0 0 20px #FFD700, 0 0 30px #FFA500; }
+          to { text-shadow: 0 0 20px #FFD700, 0 0 30px #FFD700, 0 0 40px #FFA500; }
+      }
+      @keyframes fail-pulse {
+          0% { transform: scale(1); }
+          50% { transform: scale(1.05); }
+          100% { transform: scale(1); }
+      }
+      @keyframes button-glow {
+        0% { box-shadow: 0 0 5px var(--accent-color); }
+        50% { box-shadow: 0 0 20px var(--accent-color), 0 0 30px var(--accent-color); }
+        100% { box-shadow: 0 0 5px var(--accent-color); }
+      }
+      .attribute-selected-glow {
+        animation: button-glow 1.5s infinite;
+      }
+      
+      @keyframes purple-neon-pulse {
+        from {
+            text-shadow: 0 0 4px #fff, 0 0 8px #fff, 0 0 12px #c000ff, 0 0 20px #c000ff, 0 0 25px #c000ff, 0 0 30px #c000ff, 0 0 35px #c000ff;
+        }
+        to {
+            text-shadow: 0 0 8px #fff, 0 0 12px #fff, 0 0 20px #d161ff, 0 0 30px #d161ff, 0 0 40px #d161ff, 0 0 50px #d161ff, 0 0 60px #d161ff;
+        }
+      }
+      .dice-selected-glow {
+        animation: purple-neon-pulse 1.2s infinite alternate;
+        opacity: 1 !important;
+      }
+
+      .expand-all-btn-glow {
+        filter: drop-shadow(0 0 4px #00e1ff);
+      }
+      
+      /* Animação "Cristo Vive!" */
+      @keyframes golden-text-glow {
+        0%, 100% {
+          text-shadow: none;
+          opacity: 0.6;
+        }
+        50% {
+          text-shadow: 0 0 5px #ffd700, 0 0 10px #ffd700, 0 0 15px #f0e68c;
+          opacity: 1;
+          transform: scale(1.05);
+        }
+      }
+      .golden-glow-animation {
+        animation: golden-text-glow 5s ease-in-out;
+      }
+      .christ-text {
+        font-family: 'Great Vibes', cursive;
+        opacity: 0.6;
+        color: var(--accent-color);
+        pointer-events: none;
+        transition: all 0.5s ease-in-out;
+        /* Mobile styles (default) */
+        display: block;
+        text-align: left;
+        font-size: 0.9rem;
+        margin-top: 0.25rem;
+      }
+      /* Desktop styles */
+      @media (min-width: 640px) {
+          .christ-text {
+              position: fixed;
+              bottom: 1rem;
+              left: 1rem;
+              font-size: 1.25rem;
+              text-align: left;
+              margin: 0;
+              z-index: 30;
+              display: inline-block;
+          }
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+    <!-- Adicionado Supabase para persistência de dados online -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Adicionado Babel para transpilar TSX em tempo real no navegador -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Alterado o type e adicionado presets para que o Babel processe o script corretamente -->
+    <script type="text/babel" data-type="module" data-presets="react,typescript" src="./index.tsx"></script>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
